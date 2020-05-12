@@ -14,6 +14,7 @@ from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
 from datetime import datetime
+import sys
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -31,10 +32,11 @@ migrate = Migrate(app,db)
 #----------------------------------------------------------------------------#
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
+    genres = db.Column(db.ARRAY(db.String()), nullable= False)
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
@@ -52,14 +54,14 @@ class Venue(db.Model):
         return f'<Venue id : {self.id},  name : {self.name}>'
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    genres = db.Column(db.ARRAY(db.String()), nullable= False)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     
@@ -70,14 +72,12 @@ class Artist(db.Model):
     def __repr__(self):
       return f'<Artist id: {self.id} , name : {self.name}>'
 
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # completing the relationship by adding the two foreign keys
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False) 
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-    # note that I datetime.utcnow without () 
+    artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'), nullable=False) 
+    venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'), nullable=False)
+    # note that  datetime.utcnow without () 
     start_time = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
 #----------------------------------------------------------------------------#
@@ -132,6 +132,9 @@ def venues():
     }]
   }]
   return render_template('pages/venues.html', areas=data);
+
+
+
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -242,14 +245,21 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
-  # TODO: modify data to be the data object returned from db insertion
-
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  error = False
+  try:
+    new_venue = Venue(name=request.form.get('name'),city=request.form.get('city'),state=request.form.get('state'),address=request.form.get('address'),genres=request.form.getlist('genres'),phone=request.form.get('phone'),facebook_link=request.form.get('facebook_link'),image_link=request.form.get('image_link'), website=request.form.get('website'),seeking_talent=request.form.get('seeking_talent') == 'True', seeking_description=request.form.get('seeking_description'))
+    db.session.add(new_venue)
+    db.session.commit()
+  except:
+    error = True
+    db.session.rollback()
+    print(sys.exc_info())
+  finally:
+    db.session.close() 
+  if not error:
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
+  else:
+    flash('An error occurred. Venue can not be listed ')
   return render_template('pages/home.html')
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])

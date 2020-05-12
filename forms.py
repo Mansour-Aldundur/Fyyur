@@ -116,6 +116,19 @@ class VenueForm(Form):
     facebook_link = StringField(
         'facebook_link', validators=[URL()]
     )
+    website = StringField(
+        'website', validators=[URL()]
+    )
+    seeking_talent = SelectField(
+        'seeking_talent', validators=[DataRequired()],
+        choices=[
+            ('True', 'Yes'),
+            ('False', 'No'),
+        ]
+    )
+    seeking_description = StringField(
+        'seeking_description'
+    )
 
 class ArtistForm(Form):
     name = StringField(
