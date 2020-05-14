@@ -43,6 +43,10 @@
 		<img src="{{ artist.image_link }}" alt="Venue Image" />
 	</div>
 </div>
+<br>
+<div class="edit-artist">
+	<a href="/artists/{{ artist.id }}/edit"><button type="submit" class="btn btn-lg btn-toolbar m-5"> Edit Your info </button> </a>
+</div>
 <section>
 	<h2 class="monospace">{{ artist.upcoming_shows_count }} Upcoming {% if artist.upcoming_shows_count == 1 %}Show{% else %}Shows{% endif %}</h2>
 	<div class="row">
